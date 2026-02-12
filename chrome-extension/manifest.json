@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "FingerPay Prototype",
+  "version": "0.1.0",
+  "description": "PIN-only card recovery prototype UI",
+  "action": {
+    "default_title": "FingerPay",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ]
+}

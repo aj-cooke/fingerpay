@@ -1,1 +1,96 @@
-First commit
+# FingerPay (PIN-only prototype)
+
+This prototype stores only `K` (a token) and never persists `P` (PIN) or `C` (card number).
+
+Important cryptography caveat: if `f(K, P) = C`, then `K` is necessarily a reversible protected representation of card data, even if we avoid calling it ciphertext.
+
+## Run
+
+```bash
+python3 run.py
+```
+
+`run.py` opens a simple menu:
+
+- `1`: Provide `P` to print `C` (using stored `K`).
+- `2`: Add a new card by entering `C` and `P` (generates/stores `K`).
+
+By default, stored `K` path is `~/.fingerpay/k.token`.
+
+Advanced subcommands are still available via:
+
+```bash
+python3 -m fingerpay.cli --help
+```
+
+## Commands
+
+- `create-k`: Prompts for `C` and `P`, produces storable `K`.
+- `recover`: Prompts for `P`, loads `K` (default: `~/.fingerpay/k.token`), reconstructs `C` in memory for the session.
+- `session-demo`: Exercises the memory-only session API (`unlock -> get_card_for_autofill -> lock`).
+
+## Storage guarantees
+
+- Persisted: `K` only (default file: `~/.fingerpay/k.token`, or custom with `--out`).
+- Not persisted: plaintext card number, encrypted card blob file, PIN.
+- Session only: reconstructed card during `recover` runtime.
+
+## Session API (for future extension)
+
+`fingerpay/session.py` includes `FingerPaySession`:
+
+- `unlock(k_token, pin)`: reconstructs and keeps card in memory only.
+- `get_card_for_autofill()`: returns card while unlocked (optional TTL expiry supported).
+- `lock()`: clears in-memory card immediately.
+
+## Layout
+
+- `fingerpay/core.py`: `create_k`, `recover_card`, and token/K validation.
+- `fingerpay/session.py`: memory-only `FingerPaySession`.
+- `fingerpay/cli.py`: command wiring and terminal prompts.
+- `run.py`: convenience launcher.
+
+## Chrome Extension UI (Prototype)
+
+A starter MV3 popup UI lives in `chrome-extension/` with:
+
+- `Add Card`: accepts card + PIN, calls backend `POST /create-k`, stores returned `k_token` in extension storage.
+- `Unlock`: accepts PIN, calls backend `POST /recover-card` with stored `k_token`, displays masked card.
+
+Load it in Chrome:
+
+1. Open `chrome://extensions`.
+2. Enable Developer Mode.
+3. Click "Load unpacked" and select `chrome-extension/`.
+
+Current backend contract expected by the popup:
+
+- `POST /create-k` body: `{ "card": "<digits>", "pin": "<pin>" }`
+- `POST /create-k` success: `{ "k_token": "<token>" }`
+- `POST /recover-card` body: `{ "k_token": "<token>", "pin": "<pin>" }`
+- `POST /recover-card` success: `{ "card": "<digits>" }`
+- Error response shape (both): `{ "error": "<message>" }`
+
+### Run Local API For The Extension
+
+Start API server:
+
+```bash
+python3 -m fingerpay.api
+```
+
+Expected startup output:
+
+- `FingerPay API listening on http://127.0.0.1:8787`
+- `Endpoints: POST /create-k, POST /recover-card`
+
+Then open the extension popup and keep Backend URL as `http://127.0.0.1:8787`.
+
+Beginner flow:
+
+1. In popup `Add Card`, enter card + PIN and submit.
+2. In popup `Unlock`, enter the same PIN and click:
+   - `Recover Card` to only recover/mask in popup.
+   - `Recover + Copy` to recover and copy the full card number to clipboard.
+3. Paste the copied value where needed.
+4. Popup should display masked recovered card (last 4 visible).

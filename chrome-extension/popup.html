@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FingerPay</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Prototype Control Panel</p>
+        <h1>FingerPay</h1>
+        <p class="sub">Store K locally, recover C with PIN through backend API.</p>
+      </header>
+
+      <section class="panel">
+        <label for="backend-url">Backend URL</label>
+        <input id="backend-url" type="url" placeholder="http://127.0.0.1:8787" />
+      </section>
+
+      <section class="panel">
+        <h2>Add Card</h2>
+        <form id="create-form" autocomplete="off">
+          <label for="card">Card Number</label>
+          <input id="card" inputmode="numeric" maxlength="23" placeholder="4242 4242 4242 4242" required />
+
+          <label for="create-pin">PIN</label>
+          <input id="create-pin" type="password" minlength="4" required />
+
+          <label for="confirm-pin">Confirm PIN</label>
+          <input id="confirm-pin" type="password" minlength="4" required />
+
+          <button type="submit">Generate + Store K</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Unlock</h2>
+        <form id="recover-form" autocomplete="off">
+          <label for="recover-pin">PIN</label>
+          <input id="recover-pin" type="password" minlength="4" required />
+          <div class="button-row">
+            <button type="submit" data-action="recover">Recover Card</button>
+            <button type="submit" class="secondary" data-action="copy">Recover + Copy</button>
+          </div>
+        </form>
+        <div class="card-result" id="card-result" hidden>
+          <p>Recovered</p>
+          <code id="card-value"></code>
+        </div>
+      </section>
+
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
